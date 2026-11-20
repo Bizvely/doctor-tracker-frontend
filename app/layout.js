@@ -1,3 +1,6 @@
+// Tailwind CSS লোড করার জন্য globals.css import করা হলো
+import './globals.css'
+
 export const metadata = {
   title: 'Care Guide BD | Doctor Tracker',
   description: 'Full-stack Doctor and Patient Tracking System',
