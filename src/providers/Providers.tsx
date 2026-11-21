@@ -4,8 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ApiClientError } from "@/lib/api";
+import { AuthProvider } from "@/providers/AuthProvider";
 
-// সব data-fetching ও বার্তা দেখানোর ব্যবস্থা এক জায়গায়
+// সব data-fetching, বার্তা ও login অবস্থা এক জায়গায়
 export function Providers({ children }: { children: ReactNode }) {
   // useState দিয়ে বানানো: re-render হলেও cache হারায় না
   const [queryClient] = useState(
@@ -28,7 +29,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
