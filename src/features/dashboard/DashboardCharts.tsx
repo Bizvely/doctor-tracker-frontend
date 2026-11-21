@@ -72,12 +72,18 @@ function NoData({ message }: { message: string }) {
 }
 
 // ---------- ১) সময় অনুযায়ী visit (area chart) ----------
-const VisitsTrendChart = memo(function VisitsTrendChart({ data }: { data: DashboardStats["patientsByDay"] }) {
+const VisitsTrendChart = memo(function VisitsTrendChart({
+  data,
+  days,
+}: {
+  data: DashboardStats["patientsByDay"];
+  days: number;
+}) {
   const total = useMemo(() => data.reduce((sum, item) => sum + item.count, 0), [data]);
-  if (total === 0) return <NoData message="No visits recorded in the last 30 days." />;
+  if (total === 0) return <NoData message={`No visits recorded in the last ${days} days.`} />;
 
   return (
-    <div role="img" aria-label={`Area chart of daily patient visits over the last 30 days. Total ${total} visits.`}>
+    <div role="img" aria-label={`Area chart of daily patient visits over the last ${days} days. Total ${total} visits.`}>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
           <defs>
@@ -203,8 +209,12 @@ const ConditionsChart = memo(function ConditionsChart({ data }: { data: Dashboar
 function DashboardChartsInner({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <ChartCard title="Visits over time" description="Patient visits per day, last 30 days" className="lg:col-span-2">
-        <VisitsTrendChart data={stats.patientsByDay} />
+      <ChartCard
+        title="Visits over time"
+        description={`Patient visits per day, last ${stats.range} days`}
+        className="lg:col-span-2"
+      >
+        <VisitsTrendChart data={stats.patientsByDay} days={stats.range} />
       </ChartCard>
 
       <ChartCard title="Patients per doctor" description="Top 10 doctors by number of patients">
