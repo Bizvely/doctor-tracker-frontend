@@ -2,25 +2,36 @@
 
 **Elevator pitch:** Doctor Tracker is a modern, responsive admin portal for managing doctors and their patients. Admins sign in securely, see live analytics on a dashboard, and manage doctors and patients with fast search, filters and pagination. This repository is the Next.js client; it talks to a separate Express API over REST.
 
-- Live app: https://doctortracker.bizvely.com/admin-login
-- Live API: https://doctortracker-api.bizvely.com/health
-- Backend repository: https://github.com/Bizvely/doctor-tracker-backend
-
-## Demo access
+## Live demo
 
 | | |
 |---|---|
-| Email | `admin@doctortracker.com` |
-| Password | `<ADD DEMO PASSWORD HERE>` |
+| **Login page** | https://doctortracker.bizvely.com/admin-login |
+| API health check | https://doctortracker-api.bizvely.com/health |
+| Backend repository | https://github.com/Bizvely/doctor-tracker-backend |
 
-The first request after a quiet period can take a few seconds while the free API host wakes up. Use **Load demo data** on an empty dashboard to see sample charts.
+### Demo login
+
+| | |
+|---|---|
+| Email | `demo@doctortracker.com` |
+| Password | `IHRhgs976#@$` |
+
+> **⏳ Please read before you sign in:** the API runs on a **free hosting plan** (Render) that goes to sleep when nobody uses it. The **first request after a quiet period can take up to about 40–50 seconds** (sometimes close to a minute) while the server wakes up. The app shows a "Waking up the server…" message during this time. It is not broken: please wait, and after that everything is fast. An UptimeRobot monitor pings the API every 5 minutes to reduce these waits, but the free plan can still sleep or restart, so the delay can still happen.
+
+Notes for reviewers:
+
+- The demo account has full access, so you can create, edit and delete doctors and patients. Its password cannot be changed.
+- If the dashboard is empty, click **Load demo data** (or use **Settings → Demo data**) to fill it with sample doctors and patients. Turning it off removes only the sample records, never the ones you added.
+- Please do not enter real personal or medical information.
 
 ## Features
 
 - Secure admin login, protected routes, logout, automatic redirect when the session expires
-- **Dashboard:** total doctors and patients, visits today / 7 / 30 days, visits-over-time area chart, patients-per-doctor bar chart, patients-by-condition donut chart, system status
+- **Dashboard:** total doctors and patients, visits today / 7 / 30 / 90 days with comparison to the previous period, visits-over-time area chart, patients-per-doctor bar chart, patients-by-condition donut chart, system status
 - **Doctors:** create, edit, delete; search; filter by specialization, hospital and date added; sort; pagination; per-doctor patient list where patients can be added and removed
 - **Patients:** list, create, edit, delete; search by name or phone; filter by condition, doctor and visit date range; sort; pagination
+- **Settings:** change password (other devices are signed out), demo data on/off
 - Filters live in the URL, so a refresh or a shared link restores the same view
 - Loading skeletons, empty states, toasts, confirm dialogs, friendly error messages with retry
 - Responsive layout: sidebar on desktop, slide-in menu and card lists on mobile; keyboard and screen reader friendly (skip link, focus trap in dialogs, labelled charts)
@@ -46,7 +57,7 @@ Next.js 14 (App Router, static export), React 18, TypeScript, Tailwind CSS, TanS
    ```bash
    npm run dev
    ```
-6. Open http://localhost:3000 and sign in with the admin you configured in the backend `.env`.
+6. Open http://localhost:3000 and sign in with the admin you configured in the backend `.env` (or the demo account, if you set `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD` there).
 
 Production build (static files in `out/`): `npm run build`. Type check: `npm run typecheck`.
 
@@ -61,7 +72,7 @@ flowchart LR
 
 Data flow: a page component calls a TanStack Query hook, which calls the single `api` client (`src/lib/api.ts`). The client always sends cookies, applies a long timeout for the sleeping free host, and turns a `401` into a global "session expired" event that signs the user out and clears the cache. After a mutation, only the affected query keys (`doctors`, `patients`, `dashboard`) are invalidated.
 
-Structure: `app/` (routes), `features/` (doctors, patients, dashboard, auth), `components/ui` (reusable Button, Input, Select, Modal, Table, Pagination, Toast, Skeleton, ...), `components/layout`, `providers/`, `lib/`, `types/`.
+Structure: `app/` (routes), `features/` (doctors, patients, dashboard, settings, auth), `components/ui` (reusable Button, Input, Select, Modal, Table, Pagination, Toast, Skeleton, ...), `components/layout`, `providers/`, `lib/`, `types/`.
 
 ## Technical decisions
 
@@ -77,25 +88,31 @@ The app is exported as static files for free, fast hosting on Cloudflare Pages. 
 
 ## Security headers
 
-`public/_headers` sets CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, a strict referrer policy and a restrictive Permissions-Policy on Cloudflare Pages. The CSP `connect-src` allows only the production API.
+`public/_headers` sets CSP, HSTS, `X-Frame-Options: DENY`, `nosniff`, a strict referrer policy and a restrictive Permissions-Policy on Cloudflare Pages. The CSP `connect-src` allows only the production API. `script-src` still allows `'unsafe-inline'` because a static Next.js export needs inline bootstrap scripts; a nonce-based CSP would require a server runtime.
 
 ## Visual evidence
 
 ### Desktop
 
-| Dashboard | Doctors |
+| Dashboard | Settings |
 |---|---|
-| ![Dashboard](docs/screenshots/desktop-dashboard.png) | ![Doctors](docs/screenshots/desktop-doctors.png) |
+| ![Dashboard](docs/screenshots/desktop-dashboard.png) | ![Settings](docs/screenshots/desktop-settings.png) |
 
-| Patients | Doctor details |
+| Doctors | Patients |
 |---|---|
-| ![Patients](docs/screenshots/desktop-patients.png) | ![Doctor details](docs/screenshots/desktop-doctor-detail.png) |
+| ![Doctors](docs/screenshots/desktop-doctors.png) | ![Patients](docs/screenshots/desktop-patients.png) |
 
 ### Mobile
 
-| Dashboard | Doctors | Patients |
-|---|---|---|
-| ![Mobile dashboard](docs/screenshots/mobile-dashboard.png) | ![Mobile doctors](docs/screenshots/mobile-doctors.png) | ![Mobile patients](docs/screenshots/mobile-patients.png) |
+| Dashboard (top) | Dashboard (charts) |
+|---|---|
+| ![Mobile dashboard](docs/screenshots/mobile-dashboard.png) | ![Mobile dashboard charts](docs/screenshots/mobile-dashboard-charts.png) |
+
+## Next steps
+
+- Add automated tests (component tests for forms and filters, end-to-end tests for login and CRUD).
+- Configure ESLint (it is currently skipped during the production build; TypeScript checks still run).
+- Move to a Node runtime if middleware-based route protection and a nonce-based CSP are needed.
 
 ## Deployment
 
