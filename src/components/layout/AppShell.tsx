@@ -77,9 +77,9 @@ function NavLinks({ pathname }: { pathname: string }) {
   );
 }
 
-// লগইন করা ব্যবহারকারীর নাম, email ও Logout বোতাম
-function AccountBox() {
-  const { user, logout } = useAuth();
+// Log out বোতাম (ডেস্কটপের উপরের bar আর মোবাইল মেনু, দুই জায়গায় ব্যবহার হয়)
+function LogoutButton({ className }: { className?: string }) {
+  const { logout } = useAuth();
   const toast = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -95,30 +95,68 @@ function AccountBox() {
   };
 
   return (
+    <button
+      type="button"
+      onClick={() => void handleLogout()}
+      disabled={loggingOut}
+      aria-busy={loggingOut || undefined}
+      className={cn(
+        "inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 text-sm font-medium text-white transition-colors",
+        "hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+        "disabled:cursor-not-allowed disabled:opacity-60",
+        className
+      )}
+    >
+      {loggingOut ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        <LogOut className="h-4 w-4" aria-hidden="true" />
+      )}
+      Log out
+    </button>
+  );
+}
+
+// মোবাইল স্লাইড মেনুর নিচের অংশ: নাম, email ও Logout বোতাম
+function AccountBox() {
+  const { user } = useAuth();
+
+  return (
     <div className="border-t border-white/10 pt-4">
       <div className="mb-3 px-1">
         <p className="truncate text-sm font-medium text-white">{user?.name}</p>
         <p className="truncate text-xs text-brand-200">{user?.email}</p>
       </div>
-      <button
-        type="button"
-        onClick={() => void handleLogout()}
-        disabled={loggingOut}
-        aria-busy={loggingOut || undefined}
-        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {loggingOut ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-        )}
-        Log out
-      </button>
+      <LogoutButton className="w-full" />
     </div>
   );
 }
 
-// ডেস্কটপে বাঁ পাশে sidebar, মোবাইলে উপরে বার + স্লাইড মেনু
+// ডেস্কটপের উপরের bar-এর ডান দিকের অংশ: নামের আদ্যাক্ষর, নাম, email ও Logout
+function HeaderUser() {
+  const { user } = useAuth();
+  const initial = user?.name?.trim().charAt(0).toUpperCase() || "A";
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white"
+        >
+          {initial}
+        </span>
+        <div className="hidden max-w-[220px] leading-tight md:block">
+          <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+          <p className="truncate text-xs text-brand-200">{user?.email}</p>
+        </div>
+      </div>
+      <LogoutButton />
+    </div>
+  );
+}
+
+// ডেস্কটপে উপরে সবুজ bar + বাঁ পাশে sidebar, মোবাইলে উপরে বার + স্লাইড মেনু
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -147,15 +185,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      {/* ডেস্কটপ sidebar (গাঢ় teal) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-brand-900 px-4 py-5 lg:flex">
-        <div className="mb-8 px-1">
-          <Brand />
-        </div>
+      {/* ডেস্কটপ: উপরে পুরো-চওড়া সবুজ bar */}
+      <header className="fixed inset-x-0 top-0 z-40 hidden h-16 items-center justify-between border-b border-white/10 bg-brand-900 px-5 lg:flex">
+        <Brand />
+        <HeaderUser />
+      </header>
+
+      {/* ডেস্কটপ sidebar: উপরের bar-এর নিচ থেকে শুরু, শুধু মেনু */}
+      <aside className="fixed bottom-0 left-0 top-16 z-30 hidden w-64 flex-col bg-brand-900 px-4 py-5 lg:flex">
         <NavLinks pathname={pathname} />
-        <div className="mt-auto">
-          <AccountBox />
-        </div>
       </aside>
 
       {/* মোবাইল উপরের বার */}
@@ -196,7 +234,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main id="main-content" className="lg:pl-64">
+      {/* lg:pt-16 = উপরের fixed bar-এর উচ্চতা, নইলে লেখা bar-এর নিচে ঢাকা পড়ত */}
+      <main id="main-content" className="lg:pl-64 lg:pt-16">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
       </main>
     </div>
