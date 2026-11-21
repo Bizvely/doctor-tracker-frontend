@@ -1,10 +1,14 @@
 "use client";
 
-import { HeartPulse, LayoutDashboard, Menu, Stethoscope, Users, X, type LucideIcon } from "lucide-react";
+import { HeartPulse, LayoutDashboard, LogOut, Menu, Stethoscope, Users, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface NavItem {
   href: string;
@@ -57,6 +61,37 @@ function NavLinks({ pathname }: { pathname: string }) {
   );
 }
 
+// লগইন করা ব্যবহারকারীর নাম, email ও Logout বোতাম
+function AccountBox() {
+  const { user, logout } = useAuth();
+  const toast = useToast();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async (): Promise<void> => {
+    setLoggingOut(true);
+    try {
+      // সফল হলে guard নিজেই login পাতায় নিয়ে যায়
+      await logout();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      setLoggingOut(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-slate-200 pt-4">
+      <div className="mb-3 px-1">
+        <p className="truncate text-sm font-medium text-slate-900">{user?.name}</p>
+        <p className="truncate text-xs text-slate-500">{user?.email}</p>
+      </div>
+      <Button variant="secondary" size="sm" className="w-full" loading={loggingOut} onClick={() => void handleLogout()}>
+        {!loggingOut && <LogOut className="h-4 w-4" aria-hidden="true" />}
+        Log out
+      </Button>
+    </div>
+  );
+}
+
 // ডেস্কটপে বাঁ পাশে sidebar, মোবাইলে উপরে বার + স্লাইড মেনু
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -92,6 +127,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Brand />
         </div>
         <NavLinks pathname={pathname} />
+        <div className="mt-auto">
+          <AccountBox />
+        </div>
       </aside>
 
       {/* মোবাইল উপরের বার */}
@@ -125,6 +163,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <NavLinks pathname={pathname} />
+            <div className="mt-auto">
+              <AccountBox />
+            </div>
           </div>
         </div>
       )}
