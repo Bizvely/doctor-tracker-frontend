@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
   CalendarCheck,
-  CalendarDays,
   CalendarRange,
   CheckCircle2,
   Database,
+  Gauge,
   RefreshCw,
   Server,
   Stethoscope,
@@ -16,14 +16,19 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
 import { api, getErrorMessage } from "@/lib/api";
-import type { ApiItem, DashboardStats, HealthResponse } from "@/types";
+import { cn } from "@/lib/cn";
+import type { ApiItem, DashboardRange, DashboardStats, HealthResponse } from "@/types";
 import { LoadDemoDataButton } from "./LoadDemoDataButton";
+
+// toggle-এ যে কয়টা সময় দেখানো হবে
+const RANGE_OPTIONS: DashboardRange[] = [7, 30, 90];
 
 // Chart library ভারী, তাই শুধু দরকারের সময় আলাদাভাবে লোড হয় (পাতা দ্রুত খোলে)
 function ChartsSkeleton() {
@@ -55,6 +60,31 @@ function formatUpdatedAt(stats: DashboardStats): string {
   } catch {
     return stats.generatedAt;
   }
+}
+
+// ৭ / ৩০ / ৯০ দিনের বাছাই বোতাম
+function RangeToggle({ value, onChange }: { value: DashboardRange; onChange: (next: DashboardRange) => void }) {
+  return (
+    <div role="group" aria-label="Date range" className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+      {RANGE_OPTIONS.map((option) => {
+        const active = option === value;
+        return (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option)}
+            className={cn(
+              "h-8 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
+              active ? "bg-brand-700 text-white" : "text-slate-600 hover:bg-slate-100"
+            )}
+          >
+            {option} days
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function SystemStatus() {
@@ -120,10 +150,15 @@ function SystemStatus() {
 }
 
 export function DashboardView() {
+  // কত দিনের হিসাব দেখানো হবে (শুরুতে ৩০)
+  const [range, setRange] = useState<DashboardRange>(30);
+
   const stats = useQuery({
-    queryKey: ["dashboard", "stats"],
-    queryFn: ({ signal }) => api.get<ApiItem<DashboardStats>>("/api/dashboard/stats", { signal }),
+    // range বদলালে নতুন করে data আসে; আগের data দেখানো থাকে, তাই পাতা ঝিলিক দেয় না
+    queryKey: ["dashboard", "stats", range],
+    queryFn: ({ signal }) => api.get<ApiItem<DashboardStats>>("/api/dashboard/stats", { query: { range }, signal }),
     select: (response) => response.data,
+    placeholderData: keepPreviousData,
   });
 
   const data = stats.data;
@@ -135,10 +170,13 @@ export function DashboardView() {
         title="Dashboard"
         description="Overview of doctors and patients."
         actions={
-          <Button variant="secondary" size="sm" onClick={() => void stats.refetch()} loading={stats.isFetching}>
-            {!stats.isFetching && <RefreshCw className="h-4 w-4" aria-hidden="true" />}
-            Refresh
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <RangeToggle value={range} onChange={setRange} />
+            <Button variant="secondary" size="sm" onClick={() => void stats.refetch()} loading={stats.isFetching}>
+              {!stats.isFetching && <RefreshCw className="h-4 w-4" aria-hidden="true" />}
+              Refresh
+            </Button>
+          </div>
         }
       />
 
@@ -158,13 +196,26 @@ export function DashboardView() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
             <StatCard label="Total doctors" value={data?.totals.doctors ?? 0} icon={Stethoscope} loading={!data} />
             <StatCard label="Total patients" value={data?.totals.patients ?? 0} icon={Users} loading={!data} />
-            <StatCard label="Visits today" value={data?.visits.today ?? 0} icon={CalendarCheck} loading={!data} />
-            <StatCard label="Visits, last 7 days" value={data?.visits.last7Days ?? 0} icon={CalendarDays} loading={!data} />
             <StatCard
-              label="Visits, last 30 days"
-              value={data?.visits.last30Days ?? 0}
+              label="Visits today"
+              value={data?.visits.today.current ?? 0}
+              icon={CalendarCheck}
+              loading={!data}
+              trend={data ? { ...data.visits.today, previousLabel: "yesterday" } : undefined}
+            />
+            <StatCard
+              label={`Visits, last ${data?.range ?? range} days`}
+              value={data?.visits.period.current ?? 0}
               icon={CalendarRange}
               loading={!data}
+              trend={data ? { ...data.visits.period, previousLabel: `previous ${data.range} days` } : undefined}
+            />
+            <StatCard
+              label="Avg. visits per day"
+              value={data?.visits.averagePerDay.current ?? 0}
+              icon={Gauge}
+              loading={!data}
+              trend={data ? { ...data.visits.averagePerDay, previousLabel: `previous ${data.range} days` } : undefined}
             />
           </div>
 
