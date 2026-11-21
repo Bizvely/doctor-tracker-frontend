@@ -1,10 +1,20 @@
 "use client";
 
-import { HeartPulse, LayoutDashboard, LogOut, Menu, Stethoscope, Users, X, type LucideIcon } from "lucide-react";
+import {
+  HeartPulse,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  Menu,
+  Settings,
+  Stethoscope,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -20,17 +30,22 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/doctors", label: "Doctors", icon: Stethoscope },
   { href: "/patients", label: "Patients", icon: Users },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+// গাঢ় teal পটভূমিতে বসে, তাই লেখা সাদা
 function Brand() {
   return (
-    <Link href="/dashboard" className="flex items-center gap-2.5 rounded-lg">
-      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-700 text-white">
+    <Link
+      href="/dashboard"
+      className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
         <HeartPulse className="h-5 w-5" aria-hidden="true" />
       </span>
       <span className="leading-tight">
-        <span className="block text-sm font-semibold text-slate-900">Doctor Tracker</span>
-        <span className="block text-xs text-slate-500">Care Guide BD</span>
+        <span className="block text-sm font-semibold text-white">Doctor Tracker</span>
+        <span className="block text-xs text-brand-200">Care Guide BD</span>
       </span>
     </Link>
   );
@@ -49,7 +64,8 @@ function NavLinks({ pathname }: { pathname: string }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+              active ? "bg-white/15 text-white" : "text-brand-100 hover:bg-white/10 hover:text-white"
             )}
           >
             <Icon className="h-5 w-5" aria-hidden="true" />
@@ -79,15 +95,25 @@ function AccountBox() {
   };
 
   return (
-    <div className="border-t border-slate-200 pt-4">
+    <div className="border-t border-white/10 pt-4">
       <div className="mb-3 px-1">
-        <p className="truncate text-sm font-medium text-slate-900">{user?.name}</p>
-        <p className="truncate text-xs text-slate-500">{user?.email}</p>
+        <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+        <p className="truncate text-xs text-brand-200">{user?.email}</p>
       </div>
-      <Button variant="secondary" size="sm" className="w-full" loading={loggingOut} onClick={() => void handleLogout()}>
-        {!loggingOut && <LogOut className="h-4 w-4" aria-hidden="true" />}
+      <button
+        type="button"
+        onClick={() => void handleLogout()}
+        disabled={loggingOut}
+        aria-busy={loggingOut || undefined}
+        className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loggingOut ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+        )}
         Log out
-      </Button>
+      </button>
     </div>
   );
 }
@@ -121,8 +147,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      {/* ডেস্কটপ sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white px-4 py-5 lg:flex">
+      {/* ডেস্কটপ sidebar (গাঢ় teal) */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-brand-900 px-4 py-5 lg:flex">
         <div className="mb-8 px-1">
           <Brand />
         </div>
@@ -133,14 +159,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* মোবাইল উপরের বার */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-brand-900 px-4 lg:hidden">
         <Brand />
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
           aria-label="Open menu"
           aria-expanded={menuOpen}
-          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+          className="rounded-lg p-2 text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
@@ -150,14 +176,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       {menuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-slate-900/50" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white px-4 py-5 shadow-xl">
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-brand-900 px-4 py-5 shadow-xl">
             <div className="mb-8 flex items-center justify-between px-1">
               <Brand />
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close menu"
-                className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+                className="rounded-lg p-2 text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
