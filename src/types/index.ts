@@ -72,9 +72,23 @@ export interface HealthResponse {
   uptime: number;
 }
 
+// Dashboard-এ কত দিনের হিসাব দেখানো হবে
+export type DashboardRange = 7 | 30 | 90;
+
+// বর্তমান মান আর তুলনার (আগের সময়ের) মান
+export interface Comparison {
+  current: number;
+  previous: number;
+}
+
 export interface DashboardStats {
+  range: DashboardRange;
   totals: { doctors: number; patients: number };
-  visits: { today: number; last7Days: number; last30Days: number };
+  visits: {
+    today: Comparison;
+    period: Comparison;
+    averagePerDay: Comparison;
+  };
   patientsPerDoctor: Array<{ doctorId: string; name: string; specialization: string; count: number }>;
   patientsByDay: Array<{ date: string; count: number }>;
   conditions: Array<{ condition: string; count: number }>;
