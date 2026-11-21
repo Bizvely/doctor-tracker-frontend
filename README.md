@@ -96,17 +96,17 @@ The app is exported as static files for free, fast hosting on Cloudflare Pages. 
 
 | Dashboard | Settings |
 |---|---|
-| ![Dashboard](docs/screenshots/desktop-dashboard.png) | ![Settings](docs/screenshots/desktop-settings.png) |
+| ![Dashboard](docs/desktop-dashboard.png) | ![Settings](docs/desktop-settings.png) |
 
 | Doctors | Patients |
 |---|---|
-| ![Doctors](docs/screenshots/desktop-doctors.png) | ![Patients](docs/screenshots/desktop-patients.png) |
+| ![Doctors](docs/desktop-doctors.png) | ![Patients](docs/desktop-patients.png) |
 
 ### Mobile
 
 | Dashboard (top) | Dashboard (charts) |
 |---|---|
-| ![Mobile dashboard](docs/screenshots/mobile-dashboard.png) | ![Mobile dashboard charts](docs/screenshots/mobile-dashboard-charts.png) |
+| ![Mobile dashboard](docs/mobile-dashboard.png) | ![Mobile dashboard charts](docs/mobile-dashboard-charts.png) |
 
 ## Next steps
 
