@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
 import { api, getErrorMessage } from "@/lib/api";
 import type { ApiItem, DashboardStats, HealthResponse } from "@/types";
+import { LoadDemoDataButton } from "./LoadDemoDataButton";
 
 // Chart library ভারী, তাই শুধু দরকারের সময় আলাদাভাবে লোড হয় (পাতা দ্রুত খোলে)
 function ChartsSkeleton() {
@@ -175,14 +176,17 @@ export function DashboardView() {
                 <EmptyState
                   icon={BarChart3}
                   title="No data yet"
-                  description="Add doctors and patients to see statistics and charts here."
+                  description="Add doctors and patients to see statistics and charts here, or load sample data to explore the app."
                   action={
-                    <Link
-                      href="/doctors"
-                      className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
-                    >
-                      Go to Doctors
-                    </Link>
+                    <div className="flex flex-col items-center gap-3 sm:flex-row">
+                      <Link
+                        href="/doctors"
+                        className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
+                      >
+                        Go to Doctors
+                      </Link>
+                      <LoadDemoDataButton />
+                    </div>
                   }
                 />
               </div>
